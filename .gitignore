@@ -1,46 +1,71 @@
-# Miscellaneous
-*.class
-*.log
-*.pyc
-*.swp
+# =========================================================
+# 🔹 System / OS Files
+# =========================================================
 .DS_Store
 .atom/
-.build/
-.buildlog/
 .history
-.svn/
-.swiftpm/
+.buildlog/
 migrate_working_dir/
 
-# IntelliJ related
+# =========================================================
+# 🔹 Logs & Temporary Files
+# =========================================================
+*.log
+*.swp
+*.pyc
+*.class
+
+# =========================================================
+# 🔹 Version Control (Legacy/Other VCS)
+# =========================================================
+.svn/
+
+# =========================================================
+# 🔹 Swift / iOS Package Manager
+# =========================================================
+.swiftpm/
+
+# =========================================================
+# 🔹 IntelliJ / Android Studio / JetBrains
+# =========================================================
+.idea/
 *.iml
 *.ipr
 *.iws
-.idea/
 
-# The .vscode folder contains launch configuration and tasks you configure in
-# VS Code which you may wish to be included in version control, so this line
-# is commented out by default.
+# =========================================================
+# 🔹 VS Code
+# (Uncomment if you DON'T want to track workspace settings)
+# =========================================================
 #.vscode/
 
-# Flutter/Dart/Pub related
-**/doc/api/
-**/ios/Flutter/.last_build_id
+# =========================================================
+# 🔹 Flutter / Dart / Pub
+# =========================================================
 .dart_tool/
-.flutter-plugins-dependencies
-.pub-cache/
 .pub/
+.pub-cache/
+.flutter-plugins-dependencies
 /build/
 /coverage/
+**/doc/api/
+**/ios/Flutter/.last_build_id
 
-# Symbolication related
+# =========================================================
+# 🔹 Flutter Symbolication / Obfuscation
+# =========================================================
 app.*.symbols
-
-# Obfuscation related
 app.*.map.json
 
-# Android Studio will place build artifacts here
-/android/app/debug
-/android/app/profile
-/android/app/release
+# =========================================================
+# 🔹 Android Build Outputs
+# =========================================================
+/android/app/debug/
+/android/app/profile/
+/android/app/release/
+
+# =========================================================
+# 🔹 Node / Backend (Server)
+# =========================================================
 /server/node_modules/
+/server/package-lock.json
