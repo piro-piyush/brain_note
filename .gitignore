@@ -68,4 +68,5 @@ app.*.map.json
 # 🔹 Node / Backend (Server)
 # =========================================================
 /server/node_modules/
+/server/.env
 /server/package-lock.json
