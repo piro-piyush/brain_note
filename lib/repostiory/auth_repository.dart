@@ -9,12 +9,8 @@ import 'package:google_sign_in/google_sign_in.dart';
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
   final repo = AuthRepository(
     signIn: GoogleSignIn.instance,
-    webClientId:
-    '818686422862-0g0msec5o2rs5gh2lfn9aiek63dutpoj.apps.googleusercontent.com',
   );
-
   ref.onDispose(repo.dispose);
-
   return repo;
 });
 
@@ -30,7 +26,6 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
 /// ===========================================================
 class AuthRepository {
   final GoogleSignIn _signIn;
-  final String _webClientId;
 
   StreamSubscription<GoogleSignInAuthenticationEvent>? _authSub;
 
@@ -40,54 +35,33 @@ class AuthRepository {
   ];
 
   /// 🔥 Constructor → auto initialize
-  AuthRepository({
-    required GoogleSignIn signIn,
-    required String webClientId,
-  })  : _signIn = signIn,
-        _webClientId = webClientId {
-    _init(); // auto start
-  }
+  AuthRepository({required GoogleSignIn signIn,  })
+    : _signIn = signIn;
 
-  // ===========================================================
-  // 🔹 INIT (private)
-  // ===========================================================
-  Future<void> _init() async {
-    /// 🔥 IMPORTANT:
-    /// Web → serverClientId NOT supported
-    /// Mobile → required sometimes
-    await _signIn.initialize(
-      clientId: _webClientId,
-      serverClientId: kIsWeb ? null : _webClientId,
-    );
-
-    _authSub = _signIn.authenticationEvents.listen(_onAuthEvent);
-
-    /// restore previous session automatically
-    await _signIn.attemptLightweightAuthentication();
-  }
-
-  // ===========================================================
-  // 🔹 AUTH EVENTS
-  // ===========================================================
-  void _onAuthEvent(GoogleSignInAuthenticationEvent event) {
-    print('Auth event: $event');
-  }
 
   // ===========================================================
   // 🔹 SIGN IN (button click)
   // ===========================================================
   Future<GoogleSignInAccount?> signIn() async {
-    if (!_signIn.supportsAuthenticate()) return null;
+    try {
+      debugPrint("🔵 Starting authenticate()");
 
-    return _signIn.authenticate(scopeHint: _scopes);
+      final account = await _signIn.authenticate(scopeHint: _scopes);
+
+      debugPrint("✅ Account: ${account.email}");
+
+      return account;
+    } catch (e) {
+      debugPrint("🔥 Error: $e");
+      return null;
+    }
   }
 
   // ===========================================================
   // 🔹 GET ACCESS TOKEN (backend/Supabase/Firebase)
   // ===========================================================
   Future<String?> getAccessToken(GoogleSignInAccount user) async {
-    final auth =
-    await user.authorizationClient.authorizationForScopes(_scopes);
+    final auth = await user.authorizationClient.authorizationForScopes(_scopes);
 
     return auth?.accessToken;
   }
