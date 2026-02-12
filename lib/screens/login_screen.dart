@@ -1,5 +1,4 @@
-import 'package:brain_note/models/user_model.dart';
-import 'package:brain_note/repostiory/local_storage_repository.dart';
+
 import 'package:brain_note/screens/home_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
