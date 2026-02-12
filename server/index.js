@@ -2,35 +2,60 @@ require('dotenv').config();
 
 const express = require('express');
 const mongoose = require('mongoose');
+const cors = require('cors');
+
 const authRouter = require('./routes/auth');
 
-
 const app = express();
-app.use(express.json());
-app.use(authRouter);
 
 const PORT = process.env.PORT || 3001;
 
-/* ---------- Middlewares ---------- */
+
+/* =====================================================
+   MIDDLEWARES
+===================================================== */
+
+// JSON parser
 app.use(express.json());
 
-/* ---------- Test Route ---------- */
+// CORS (safe config)
+app.use(
+    cors({
+        origin: ['http://localhost:3000'], // Flutter web
+        credentials: true,
+    })
+);
+
+
+/* =====================================================
+   ROUTES
+===================================================== */
+
 app.get('/', (req, res) => {
-    res.send('Server running 🚀');
+    res.send('🚀 Server running');
 });
 
-/* ---------- Start App ---------- */
+// all auth routes
+app.use('/api/auth', authRouter);
+
+
+/* =====================================================
+   DATABASE + SERVER START
+===================================================== */
+
 async function start() {
     try {
         await mongoose.connect(process.env.MONGO_URI);
+
         console.log('✅ MongoDB Connected');
 
-        app.listen(PORT, () =>
-            console.log(`🚀 Server running on http://localhost:${PORT}`)
-        );
+        app.listen(PORT, '0.0.0.0', () => {
+            console.log(`🚀 Server running → http://localhost:${PORT}`);
+        });
 
     } catch (err) {
-        console.error('❌ DB Error:', err.message);
+        console.error('❌ DB Error:', err);
+        process.exit(1);
     }
 }
 
