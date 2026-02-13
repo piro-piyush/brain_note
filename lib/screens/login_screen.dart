@@ -1,18 +1,15 @@
-
 import 'package:brain_note/screens/home_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:brain_note/repostiory/auth_repository.dart';
 import 'package:brain_note/common/widgets/buttons/google_button.dart';
+import 'package:routemaster/routemaster.dart';
 
 class LoginScreen extends ConsumerWidget {
   const LoginScreen({super.key});
 
-  Future<void> _handleMobileSignIn(
-      WidgetRef ref,
-      BuildContext context,
-      ) async {
+  Future<void> _handleMobileSignIn(WidgetRef ref, BuildContext context) async {
     final repo = ref.read(authRepositoryProvider);
 
     final result = await repo.signIn();
@@ -21,16 +18,14 @@ class LoginScreen extends ConsumerWidget {
     if (result.error != null) {
       if (!context.mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(result.error ?? 'Login failed')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(result.error ?? 'Login failed')));
       return;
     }
 
     /// ✅ SUCCESS
     final user = result.data!;
-
-
 
     /// 🔹 update state
     ref.read(userProvider.notifier).setUser(user);
@@ -38,15 +33,13 @@ class LoginScreen extends ConsumerWidget {
     if (!context.mounted) return;
 
     /// 🔹 snackbar
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("✅ User: ${user.email}")),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text("✅ User: ${user.email}")));
 
     /// 🔹 navigate
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const HomeScreen()),
-    );
-
+    final navigator = Routemaster.of(context);
+    navigator.replace('/');
     debugPrint("✅ User: ${user.email}");
   }
 
