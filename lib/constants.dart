@@ -19,10 +19,11 @@ class ApiConfig {
 
   /* ---------- ROUTES ---------- */
   static const String signUp = '/api/auth/signup';
-  static const String login  = '/api/auth/login';
+  static const String login = '/api/auth/login';
+  static const String user = '/api/auth/';
 
   /* ---------- FULL URL HELPERS ---------- */
   static Uri get signUpUri => Uri.parse('$baseUrl$signUp');
-  static Uri get loginUri  => Uri.parse('$baseUrl$login');
-  static Uri get getUri => Uri.parse(baseUrl);
+  static Uri get loginUri => Uri.parse('$baseUrl$login');
+  static Uri get getUri => Uri.parse('$baseUrl$user');
 }
