@@ -13,7 +13,7 @@ class LocalStorageRepository {
   LocalStorageRepository(this._prefs);
 
   /* =========================
-     SAVE TOKEN
+     SAVE TOKEN 
   ========================= */
   Future<void> setToken(String token) async {
     await _prefs.setString(_tokenKey, token);
