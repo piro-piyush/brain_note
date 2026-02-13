@@ -174,7 +174,7 @@ class AuthRepository {
 
   Future<void> signOut() async {
     await _signIn.signOut();
-    await _storage.clearToken(); // ✅ important
+    await _storage.clearToken();
   }
 
   // ===========================================================
