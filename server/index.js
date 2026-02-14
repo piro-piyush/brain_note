@@ -5,6 +5,7 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 
 const authRouter = require('./routes/auth');
+const userRouter = require('./routes/user');
 
 const app = express();
 
@@ -19,12 +20,15 @@ const PORT = process.env.PORT || 3001;
 app.use(express.json());
 
 // CORS (safe config)
-app.use(
-    cors({
-        origin: ['http://localhost:3000'], // Flutter web
-        credentials: true,
-    })
-);
+// app.use(
+//     cors({
+//         origin: ['http://localhost:3000'], // Flutter web
+//         credentials: true,
+//     })
+// );
+app.use(cors({
+    origin: '*' // or restrict to your deployed frontend URL
+}));
 
 app.use((req, res, next) => {
     res.setHeader(
@@ -48,7 +52,7 @@ app.get('/', (req, res) => {
 
 // all auth routes
 app.use('/api/auth', authRouter);
-
+app.use('/api/user', userRouter);
 
 /* =====================================================
    DATABASE + SERVER START
