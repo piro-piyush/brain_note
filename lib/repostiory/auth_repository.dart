@@ -113,9 +113,8 @@ class AuthRepository {
       if (tokenToSend == null) return ErrorModel(error: "Failed to get token");
 
       final platform = kIsWeb ? "web" : "mobile";
-      final uri = await ApiConfig.authUri;
       final response = await _client.post(
-        uri,
+        ApiConfig.authUri,
         headers: const {'Content-Type': 'application/json; charset=UTF-8'},
         body: jsonEncode({"token": tokenToSend, "platform": platform}),
       );
@@ -123,7 +122,9 @@ class AuthRepository {
       final body = jsonDecode(response.body);
       StatusHandler.handle(response.statusCode, body);
 
-      final user = UserModel.fromJson(body['data']['user']).copyWith(token: body['data']['token']);
+      final user = UserModel.fromJson(
+        body['data']['user'],
+      ).copyWith(token: body['data']['token']);
 
       await _saveToken(user.token);
 
@@ -145,8 +146,7 @@ class AuthRepository {
         return const ErrorModel(error: "No token found", data: null);
       }
 
-      final uri = await ApiConfig.getUri;
-      final response = await _client.get(uri, headers: headers);
+      final response = await _client.get(ApiConfig.getUri, headers: headers);
 
       final body = jsonDecode(response.body);
 
