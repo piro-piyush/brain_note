@@ -1,29 +1,59 @@
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 
 class ApiConfig {
   ApiConfig._();
 
-  /* ---------- PORT ---------- */
   static const int port = 3001;
 
-  /* ---------- HOST ONLY (no port here) ---------- */
-  static String get _host {
+  /// Detect host dynamically
+  static Future<String> get host async {
     if (kIsWeb) return 'localhost';
 
-    // Android emulator
-    return '10.0.2.2';
+    if (Platform.isAndroid || Platform.isIOS) {
+      // Check if running on emulator/simulator
+      final isEmulator = await _isEmulator();
+
+      if (isEmulator) {
+        // Android emulator uses 10.0.2.2, iOS simulator uses localhost
+        return Platform.isAndroid ? '10.0.2.2' : 'localhost';
+      } else {
+        // Real device → return LAN IP of PC
+        final lanIp = await _getLocalIp();
+        return lanIp ?? 'localhost';
+      }
+    }
+
+    // Fallback
+    return 'localhost';
   }
 
-  /* ---------- BASE URL ---------- */
-  static String get baseUrl => 'http://$_host:$port';
+  /// Build base URL dynamically
+  static Future<String> get baseUrl async => 'http://${await host}:$port/api';
 
   /* ---------- ROUTES ---------- */
-  static const String signUp = '/api/auth/signup';
-  static const String login = '/api/auth/login';
-  static const String user = '/api/auth/';
+  static const String google = '/auth/google';
+  static const String user = '/user';
 
-  /* ---------- FULL URL HELPERS ---------- */
-  static Uri get signUpUri => Uri.parse('$baseUrl$signUp');
-  static Uri get loginUri => Uri.parse('$baseUrl$login');
-  static Uri get getUri => Uri.parse('$baseUrl$user');
+  /// Full URL helpers
+  static Future<Uri> get authUri async => Uri.parse('${await baseUrl}$google');
+  static Future<Uri> get getUri async => Uri.parse('${await baseUrl}$user');
+
+  /// Helper: Detect emulator
+  static Future<bool> _isEmulator() async {
+    if (Platform.isAndroid) {
+      final androidId = await File('/proc/self/cgroup').readAsString().catchError((_) => '');
+      return androidId.contains(':/docker') || androidId.contains(':/emulator');
+    }
+    if (Platform.isIOS) {
+      // For iOS, simplest check: simulator has environment variable SIMULATOR_DEVICE_NAME
+      return Platform.environment.containsKey('SIMULATOR_DEVICE_NAME');
+    }
+    return false;
+  }
+
+  /// Helper: Get PC LAN IP (first IPv4 in Wi-Fi / Ethernet)
+  static Future<String?> _getLocalIp() async {
+    return "192.168.1.34";
+  }
 }
