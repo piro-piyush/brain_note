@@ -1,9 +1,6 @@
-import 'package:brain_note/screens/home_screen.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:brain_note/repostiory/auth_repository.dart';
-import 'package:brain_note/common/widgets/buttons/google_button.dart';
 import 'package:routemaster/routemaster.dart';
 
 class LoginScreen extends ConsumerWidget {
@@ -47,11 +44,13 @@ class LoginScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       body: Center(
-        child: kIsWeb
-            /// 🌍 WEB → Google official button
-            ? buildGoogleButton()
-            /// 📱 MOBILE → normal authenticate()
-            : ElevatedButton.icon(
+        child:
+        // kIsWeb
+        //     /// 🌍 WEB → Google official button
+        //     ? buildGoogleButton()
+        //     /// 📱 MOBILE → normal authenticate()
+        //     :
+        ElevatedButton.icon(
                 onPressed: () => _handleMobileSignIn(ref, context),
                 icon: Image.asset('assets/images/g-logo-2.png', height: 20),
                 label: const Text(

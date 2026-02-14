@@ -17,13 +17,16 @@ class LocalStorageRepository {
   ========================= */
   Future<void> setToken(String token) async {
     await _prefs.setString(_tokenKey, token);
+    print('[LocalStorage] Token saved: $token');
   }
 
   /* =========================
      GET TOKEN
   ========================= */
   String? getToken() {
-    return _prefs.getString(_tokenKey);
+    final token = _prefs.getString(_tokenKey);
+    print('[LocalStorage] Retrieved token: $token');
+    return token;
   }
 
   /* =========================
@@ -31,6 +34,7 @@ class LocalStorageRepository {
   ========================= */
   Future<void> clearToken() async {
     await _prefs.remove(_tokenKey);
+    print('[LocalStorage] Token removed');
   }
 
   /* =========================
@@ -38,5 +42,6 @@ class LocalStorageRepository {
   ========================= */
   Future<void> clearAll() async {
     await _prefs.clear();
+    print('[LocalStorage] All keys cleared');
   }
 }
