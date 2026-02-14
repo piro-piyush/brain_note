@@ -20,9 +20,19 @@ import '../../models/user_model.dart';
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
   final localStorageRepository = ref.read(localStorageProvider);
   final repo = AuthRepository(
-    signIn: GoogleSignIn.instance,
+    signIn: GoogleSignIn(
+      clientId:
+          '818686422862-1lme4ebsdbaflapqjl8vjj9543ha9bhc.apps.googleusercontent.com',
+      serverClientId: kIsWeb
+          ? null
+          : '818686422862-1lme4ebsdbaflapqjl8vjj9543ha9bhc.apps.googleusercontent.com',
+      scopes: [
+        'https://www.googleapis.com/auth/userinfo.email',
+        'https://www.googleapis.com/auth/userinfo.profile',
+      ],
+    ),
     client: Client(),
-    localStorageRepository: localStorageRepository
+    localStorageRepository: localStorageRepository,
   );
 
   ref.onDispose(repo.dispose);
@@ -55,27 +65,20 @@ class AuthRepository {
   final Client _client;
   final LocalStorageRepository _storage;
 
-  StreamSubscription<GoogleSignInAuthenticationEvent>? _authSub;
-
-  static const _scopes = [
-    'https://www.googleapis.com/auth/userinfo.email',
-    'https://www.googleapis.com/auth/userinfo.profile',
-  ];
-
   AuthRepository({
     required GoogleSignIn signIn,
     required Client client,
     required LocalStorageRepository localStorageRepository,
-  })  : _signIn = signIn,
-        _client = client,
-        _storage = localStorageRepository;
+  }) : _signIn = signIn,
+       _client = client,
+       _storage = localStorageRepository;
 
   // ===========================================================
   // 🔹 COMMON HELPERS
   // ===========================================================
 
   Future<Map<String, String>> _authHeaders() async {
-    final token =  _storage.getToken();
+    final token = _storage.getToken();
 
     return {
       'Content-Type': 'application/json; charset=UTF-8',
@@ -83,14 +86,13 @@ class AuthRepository {
     };
   }
 
-  Future<void> _saveToken(String token) =>
-      _storage.setToken(token);
+  Future<void> _saveToken(String token) => _storage.setToken(token);
 
-  ErrorModel _handleError(Object e) {
+  ErrorModel _handleError(Object e, StackTrace stack) {
     if (e is ApiException) {
       return ErrorModel(error: e.message, data: null);
     }
-
+    debugPrint("$stack");
     debugPrint("🔥 Auth error: $e");
     return const ErrorModel(error: "Something went wrong", data: null);
   }
@@ -101,38 +103,33 @@ class AuthRepository {
 
   Future<ErrorModel> signIn() async {
     try {
-      debugPrint("🔵 Google SignIn started");
+      final account = await _signIn.signIn();
+      if (account == null) return ErrorModel(error: "Login cancelled");
 
-      final account = await _signIn.authenticate(scopeHint: _scopes);
+      final auth = await account.authentication;
 
-      final tempUser = UserModel(
-        name: account.displayName ?? '',
-        email: account.email,
-        profileUrl: account.photoUrl ?? '',
-        uid: account.id,
-        token: '',
-      );
+      // Send idToken on mobile, accessToken on web
+      final tokenToSend = !kIsWeb ? auth.idToken : auth.accessToken;
+      if (tokenToSend == null) return ErrorModel(error: "Failed to get token");
 
+      final platform = kIsWeb ? "web" : "mobile";
+      final uri = await ApiConfig.authUri;
       final response = await _client.post(
-        ApiConfig.signUpUri,
-        headers: const {
-          'Content-Type': 'application/json; charset=UTF-8',
-        },
-        body: jsonEncode(tempUser.toJson()),
+        uri,
+        headers: const {'Content-Type': 'application/json; charset=UTF-8'},
+        body: jsonEncode({"token": tokenToSend, "platform": platform}),
       );
 
       final body = jsonDecode(response.body);
-
       StatusHandler.handle(response.statusCode, body);
 
-      final user = UserModel.fromJson(body['data']['user'])
-          .copyWith(token: body['data']['token']);
+      final user = UserModel.fromJson(body['data']['user']).copyWith(token: body['data']['token']);
 
       await _saveToken(user.token);
 
       return ErrorModel(data: user);
-    } catch (e) {
-      return _handleError(e);
+    } catch (e, st) {
+      return _handleError(e, st);
     }
   }
 
@@ -148,23 +145,22 @@ class AuthRepository {
         return const ErrorModel(error: "No token found", data: null);
       }
 
-      final response = await _client.get(
-        ApiConfig.getUri,
-        headers: headers,
-      );
+      final uri = await ApiConfig.getUri;
+      final response = await _client.get(uri, headers: headers);
 
       final body = jsonDecode(response.body);
 
       StatusHandler.handle(response.statusCode, body);
 
-      final user = UserModel.fromJson(body['data']['user'])
-          .copyWith(token: body['data']['token']);
+      final user = UserModel.fromJson(
+        body['data']['user'],
+      ).copyWith(token: body['data']['token']);
 
       await _saveToken(user.token);
 
       return ErrorModel(data: user);
-    } catch (e) {
-      return _handleError(e);
+    } catch (e, st) {
+      return _handleError(e, st);
     }
   }
 
@@ -173,17 +169,12 @@ class AuthRepository {
   // ===========================================================
 
   Future<void> signOut() async {
-    await _signIn.signOut();
-    await _storage.clearToken();
+    Future.wait([_signIn.signOut(), _signIn.disconnect()]);
   }
 
   // ===========================================================
   // 🔹 CLEANUP
   // ===========================================================
 
-  void dispose() {
-    _authSub?.cancel();
-    _client.close();
-  }
+  void dispose() => _client.close();
 }
-
