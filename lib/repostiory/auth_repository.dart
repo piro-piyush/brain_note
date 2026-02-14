@@ -1,132 +1,125 @@
 import 'dart:async';
 import 'dart:convert';
-
+import 'package:brain_note/common/network/api_exception.dart';
+import 'package:brain_note/common/network/status_handler.dart';
+import 'package:brain_note/constants.dart';
 import 'package:brain_note/models/error_model.dart';
+import 'package:brain_note/models/user_model.dart';
 import 'package:brain_note/repostiory/local_storage_repository.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../common/network/api_exception.dart';
-import '../../common/network/status_handler.dart';
-import '../../constants.dart';
-import '../../models/user_model.dart';
-
-/// ===========================================================
-/// Repository Provider
-/// ===========================================================
+final googleSignInProvider = Provider<GoogleSignIn>((ref) {
+  return GoogleSignIn(
+    clientId:
+    '818686422862-1lme4ebsdbaflapqjl8vjj9543ha9bhc.apps.googleusercontent.com',
+    serverClientId: kIsWeb
+        ? null
+        : '818686422862-1lme4ebsdbaflapqjl8vjj9543ha9bhc.apps.googleusercontent.com',
+    scopes: const [
+      'https://www.googleapis.com/auth/userinfo.email',
+      'https://www.googleapis.com/auth/userinfo.profile',
+    ],
+  );
+});
 
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
-  final localStorageRepository = ref.read(localStorageProvider);
   final repo = AuthRepository(
-    signIn: GoogleSignIn(
-      clientId:
-          '818686422862-1lme4ebsdbaflapqjl8vjj9543ha9bhc.apps.googleusercontent.com',
-      serverClientId: kIsWeb
-          ? null
-          : '818686422862-1lme4ebsdbaflapqjl8vjj9543ha9bhc.apps.googleusercontent.com',
-      scopes: [
-        'https://www.googleapis.com/auth/userinfo.email',
-        'https://www.googleapis.com/auth/userinfo.profile',
-      ],
-    ),
+    signIn: ref.read(googleSignInProvider),
     client: Client(),
-    localStorageRepository: localStorageRepository,
+    storage: ref.read(localStorageProvider),
   );
 
   ref.onDispose(repo.dispose);
   return repo;
 });
 
-/// ===========================================================
-/// ✅ USER STATE (Riverpod 3.x style)
-/// ===========================================================
-
 class UserNotifier extends Notifier<UserModel?> {
   @override
   UserModel? build() => null;
 
-  void setUser(UserModel user) => state = user;
+  void set(UserModel user) => state = user;
 
   void clear() => state = null;
 }
 
-final userProvider = NotifierProvider<UserNotifier, UserModel?>(
-  UserNotifier.new,
-);
-
-/// ===========================================================
-/// AuthRepository
-/// ===========================================================
+final userProvider =
+NotifierProvider<UserNotifier, UserModel?>(UserNotifier.new);
 
 class AuthRepository {
   final GoogleSignIn _signIn;
   final Client _client;
   final LocalStorageRepository _storage;
 
-  AuthRepository({
+  const AuthRepository({
     required GoogleSignIn signIn,
     required Client client,
-    required LocalStorageRepository localStorageRepository,
-  }) : _signIn = signIn,
-       _client = client,
-       _storage = localStorageRepository;
+    required LocalStorageRepository storage,
+  })  : _signIn = signIn,
+        _client = client,
+        _storage = storage;
 
-  // ===========================================================
-  // 🔹 COMMON HELPERS
-  // ===========================================================
+  // ==============================
+  // 🔹 HEADERS
+  // ==============================
 
-  Future<Map<String, String>> _authHeaders() async {
-    final token = _storage.getToken();
-
+  Map<String, String> _headers({String? token}) {
     return {
       'Content-Type': 'application/json; charset=UTF-8',
       if (token != null) 'Authorization': 'Bearer $token',
     };
   }
 
-  Future<void> _saveToken(String token) => _storage.setToken(token);
+  Future<void> _persistToken(String token) =>
+      _storage.setToken(token);
 
   ErrorModel _handleError(Object e, StackTrace stack) {
     if (e is ApiException) {
-      return ErrorModel(error: e.message, data: null);
+      return ErrorModel(error: e.message);
     }
-    debugPrint("$stack");
-    debugPrint("🔥 Auth error: $e");
-    return const ErrorModel(error: "Something went wrong", data: null);
+
+    debugPrint('AuthRepository Error: $e');
+    debugPrintStack(stackTrace: stack);
+
+    return const ErrorModel(error: 'Something went wrong');
   }
 
-  // ===========================================================
+  // ==============================
   // 🔹 SIGN IN
-  // ===========================================================
+  // ==============================
 
   Future<ErrorModel> signIn() async {
     try {
       final account = await _signIn.signIn();
-      if (account == null) return ErrorModel(error: "Login cancelled");
+      if (account == null) {
+        return const ErrorModel(error: 'Login cancelled');
+      }
 
       final auth = await account.authentication;
+      final token = kIsWeb ? auth.accessToken : auth.idToken;
 
-      // Send idToken on mobile, accessToken on web
-      final tokenToSend = !kIsWeb ? auth.idToken : auth.accessToken;
-      if (tokenToSend == null) return ErrorModel(error: "Failed to get token");
+      if (token == null) {
+        return const ErrorModel(error: 'Failed to retrieve token');
+      }
 
-      final platform = kIsWeb ? "web" : "mobile";
       final response = await _client.post(
         ApiConfig.authUri,
-        headers: const {'Content-Type': 'application/json; charset=UTF-8'},
-        body: jsonEncode({"token": tokenToSend, "platform": platform}),
+        headers: _headers(),
+        body: jsonEncode({
+          "token": token,
+          "platform": kIsWeb ? "web" : "mobile",
+        }),
       );
 
       final body = jsonDecode(response.body);
       StatusHandler.handle(response.statusCode, body);
 
-      final user = UserModel.fromJson(
-        body['data']['user'],
-      ).copyWith(token: body['data']['token']);
+      final user = UserModel.fromJson(body['data']['user'])
+          .copyWith(token: body['data']['token']);
 
-      await _saveToken(user.token);
+      await _persistToken(user.token);
 
       return ErrorModel(data: user);
     } catch (e, st) {
@@ -134,29 +127,29 @@ class AuthRepository {
     }
   }
 
-  // ===========================================================
-  // 🔹 AUTO LOGIN (token based)
-  // ===========================================================
+  // ==============================
+  // 🔹 AUTO LOGIN
+  // ==============================
 
   Future<ErrorModel> getUser() async {
     try {
-      final headers = await _authHeaders();
-
-      if (!headers.containsKey('Authorization')) {
-        return const ErrorModel(error: "No token found", data: null);
+      final token = _storage.getToken();
+      if (token == null) {
+        return const ErrorModel(error: 'No token found');
       }
 
-      final response = await _client.get(ApiConfig.getUri, headers: headers);
+      final response = await _client.get(
+        ApiConfig.getUri,
+        headers: _headers(token: token),
+      );
 
       final body = jsonDecode(response.body);
-
       StatusHandler.handle(response.statusCode, body);
 
-      final user = UserModel.fromJson(
-        body['data']['user'],
-      ).copyWith(token: body['data']['token']);
+      final user = UserModel.fromJson(body['data']['user'])
+          .copyWith(token: body['data']['token']);
 
-      await _saveToken(user.token);
+      await _persistToken(user.token);
 
       return ErrorModel(data: user);
     } catch (e, st) {
@@ -164,17 +157,22 @@ class AuthRepository {
     }
   }
 
-  // ===========================================================
+  // ==============================
   // 🔹 LOGOUT
-  // ===========================================================
+  // ==============================
 
   Future<void> signOut() async {
-    Future.wait([_signIn.signOut(), _signIn.disconnect()]);
+    await Future.wait([
+      _signIn.signOut(),
+      _signIn.disconnect(),
+      _storage.clearToken(),
+      _storage.clearAll(),
+    ]);
   }
 
-  // ===========================================================
+  // ==============================
   // 🔹 CLEANUP
-  // ===========================================================
+  // ==============================
 
   void dispose() => _client.close();
 }

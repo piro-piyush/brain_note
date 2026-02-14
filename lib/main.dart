@@ -38,7 +38,7 @@ class _MyAppState extends ConsumerState<MyApp> {
       final res = await ref.read(authRepositoryProvider).getUser();
       if (res.data != null && res.data is UserModel) {
         final user = res.data!;
-        ref.read(userProvider.notifier).setUser(user);
+        ref.read(userProvider.notifier).set(user);
       }
     });
   }

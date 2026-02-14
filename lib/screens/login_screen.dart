@@ -25,7 +25,7 @@ class LoginScreen extends ConsumerWidget {
     final user = result.data!;
 
     /// 🔹 update state
-    ref.read(userProvider.notifier).setUser(user);
+    ref.read(userProvider.notifier).set(user);
 
     if (!context.mounted) return;
 

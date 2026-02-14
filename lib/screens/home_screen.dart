@@ -1,8 +1,8 @@
+import 'package:brain_note/colors.dart';
+import 'package:brain_note/models/user_model.dart';
 import 'package:brain_note/repostiory/auth_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-import '../../models/user_model.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -12,7 +12,20 @@ class HomeScreen extends ConsumerWidget {
     final UserModel? user = ref.watch(userProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Home'), centerTitle: true),
+      appBar: AppBar(
+        backgroundColor: kWhiteColor,
+        elevation: 0,
+        actions: [
+          IconButton(
+            onPressed: () {},
+            icon: const Icon(Icons.add, color: kBlackColor),
+          ),
+          IconButton(
+            onPressed: () {},
+            icon: const Icon(Icons.logout, color: kBlackColor),
+          ),
+        ],
+      ),
 
       body: user == null
           ? const Center(
@@ -58,7 +71,7 @@ class HomeScreen extends ConsumerWidget {
 
                         await repo.signOut();
 
-                        ref.read(userProvider.notifier).state = null;
+                        ref.read(userProvider.notifier).clear();
 
                         if (context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
