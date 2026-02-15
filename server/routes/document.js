@@ -10,9 +10,10 @@ const auth = require('../middlewares/auth');
    CREATE DOCUMENT
    POST /api/docs/create
 ===================================================== */
-router.post('/', auth, async (req, res) => {
+router.post('/create', auth, async (req, res) => {
   try {
     const { createdAt } = req.body;
+
     const newDocument = new Document({
       uid: req.user,
       title: 'Untitled Document',
@@ -20,6 +21,10 @@ router.post('/', auth, async (req, res) => {
     });
 
     const savedDocument = await newDocument.save();
+
+    console.log(
+      `[DOC_CREATED] user=${req.user} docId=${savedDocument._id}`
+    );
 
     return ApiResponse.success(
       res,
@@ -29,7 +34,9 @@ router.post('/', auth, async (req, res) => {
     );
 
   } catch (error) {
-    console.error('[Create Document Error]:', error);
+    console.error(
+      `[DOC_CREATE_ERROR] user=${req.user} message=${error.message}`
+    );
 
     return ApiResponse.error(
       res,
