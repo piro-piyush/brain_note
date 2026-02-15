@@ -7,6 +7,49 @@ const HttpStatus = require('../utils/httpStatus');
 const auth = require('../middlewares/auth');
 
 
+
+/* =====================================================
+   CREATE DOCUMENT
+   POST /api/docs/create
+===================================================== */
+router.post('/create', auth, async (req, res) => {
+  try {
+    const { createdAt } = req.body;
+
+    const newDocument = new Document({
+      uid: req.userId,
+      title: 'Untitled Document',
+      createdAt: createdAt || new Date(), // fallback
+    });
+
+    const savedDocument = await newDocument.save();
+
+    console.log(
+      `[DOC_CREATED] user=${req.userId} docId=${savedDocument._id}`
+    );
+
+    return ApiResponse.success(
+      res,
+      savedDocument,
+      'Document created successfully',
+      HttpStatus.CREATED
+    );
+
+  } catch (error) {
+    console.error(
+      `[DOC_CREATE_ERROR] user=${req.userId} message=${error.message}`
+    );
+
+    return ApiResponse.error(
+      res,
+      'Failed to create document',
+      HttpStatus.INTERNAL_SERVER_ERROR
+    );
+  }
+});
+
+
+
 /* =====================================================
    UPDATE TITLE
    POST /api/docs/title
@@ -62,13 +105,39 @@ router.post('/title', auth, async (req, res) => {
 });
 
 
-/* =====================================================
-   GET SINGLE DOCUMENT
-   GET /api/docs/:id
-===================================================== */
+/* GET MY DOCUMENTS */
+router.get('/me', auth, async (req, res) => {
+  try {
+    const documents = await Document.find({
+      uid: req.userId
+    })
+      .sort({ createdAt: -1 })
+      .lean();
+
+    return ApiResponse.success(
+      res,
+      documents,
+      'Documents fetched successfully',
+      HttpStatus.OK
+    );
+  } catch (error) {
+    console.error(
+      `[DOC_FETCH_ERROR] user=${req.userId} message=${error.message}`
+    );
+
+    return ApiResponse.error(
+      res,
+      'Failed to fetch documents',
+      HttpStatus.INTERNAL_SERVER_ERROR
+    );
+  }
+});
+
+
+/* GET SINGLE DOCUMENT */
 router.get('/:id', auth, async (req, res) => {
   try {
-    const document = await Document.findById(req.params.id).lean();
+    const document = await Document.findById(req.params.id);
 
     if (!document) {
       return ApiResponse.error(
@@ -78,17 +147,12 @@ router.get('/:id', auth, async (req, res) => {
       );
     }
 
-    console.log(
-      `[DOC_SINGLE_FETCH] user=${req.userId} docId=${document._id}`
-    );
-
     return ApiResponse.success(
       res,
       document,
       'Document fetched successfully',
       HttpStatus.OK
     );
-
   } catch (error) {
     console.error(
       `[DOC_FETCH_ERROR] user=${req.userId} message=${error.message}`
@@ -101,5 +165,7 @@ router.get('/:id', auth, async (req, res) => {
     );
   }
 });
+
+
 
 module.exports = router;
