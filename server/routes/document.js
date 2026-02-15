@@ -48,5 +48,39 @@ router.post('/create', auth, async (req, res) => {
   }
 });
 
+/* =====================================================
+   GET MY DOCUMENTS
+   GET /api/docs/me
+===================================================== */
+router.get('/me', auth, async (req, res) => {
+  try {
+    const documents = await Document.find({
+      uid: req.userId
+    }).sort({ createdAt: -1 }).lean();
+
+    console.log(
+      `[DOC_FETCH] user=${req.userId} count=${documents.length}`
+    );
+
+    return ApiResponse.success(
+      res,
+      documents,
+      'Documents fetched successfully',
+      HttpStatus.OK
+    );
+
+  } catch (error) {
+    console.error(
+      `[DOC_FETCH_ERROR] user=${req.userId} message=${error.message}`
+    );
+
+    return ApiResponse.error(
+      res,
+      'Failed to fetch documents',
+      HttpStatus.INTERNAL_SERVER_ERROR
+    );
+  }
+});
+
 
 module.exports = router;
