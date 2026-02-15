@@ -36,5 +36,5 @@ class DocumentModel {
 
   String toJson() => json.encode(toMap());
 
-  factory DocumentModel.fromJson(String source) => DocumentModel.fromMap(json.decode(source));
+  factory DocumentModel.fromJson(Map<String, dynamic> source) => DocumentModel.fromMap(source);
 }

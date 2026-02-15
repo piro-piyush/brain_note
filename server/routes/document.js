@@ -13,6 +13,7 @@ const auth = require('../middlewares/auth');
 router.post('/create', auth, async (req, res) => {
   try {
     console.log('[Create Doc] Request body:', req.body);
+
     const { createdAt } = req.body;
 
     const newDocument = new Document({
@@ -24,7 +25,7 @@ router.post('/create', auth, async (req, res) => {
     const savedDocument = await newDocument.save();
 
     console.log(
-      `[DOC_CREATED] user=${req.user} docId=${savedDocument._id}`
+      `[DOC_CREATED] user=${req.userId} docId=${savedDocument._id}`
     );
 
     return ApiResponse.success(
@@ -36,7 +37,7 @@ router.post('/create', auth, async (req, res) => {
 
   } catch (error) {
     console.error(
-      `[DOC_CREATE_ERROR] user=${req.user} message=${error.message}`
+      `[DOC_CREATE_ERROR] user=${req.userId} message=${error.message}`
     );
 
     return ApiResponse.error(
@@ -46,5 +47,6 @@ router.post('/create', auth, async (req, res) => {
     );
   }
 });
+
 
 module.exports = router;
