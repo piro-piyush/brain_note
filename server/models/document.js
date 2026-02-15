@@ -1,27 +1,25 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
-const docSchema = new mongoose.Schema(
-    {
-        uid: {
-            type: String,
-            required: true,
-            unique: true,
-        },
-        title: {
-            type: String,
-            required: true,
-            trim: true,
-        },
-        content: {
-            type: Array,
-            default: [],
-        },
-        createdAt: {
-            required: true,
-            type: Number,
+const documentSchema = mongoose.Schema({
+    uid: {
+        required: true,
+        type: String,
+    },
+    createdAt: {
+        required: true,
+        type: Number,
+    },
+    title: {
+        required: true,
+        type: String,
+        trim: true,
+    },
+    content: {
+        type: Array,
+        default: [],
+    },
+});
 
-        }
-    }
-);
+const Document = mongoose.model("Document", documentSchema);
 
-module.exports = mongoose.model('Docuement', docSchema);
+module.exports = Document;

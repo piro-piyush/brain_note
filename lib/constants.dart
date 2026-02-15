@@ -9,9 +9,9 @@ class ApiConfig {
 
   static String get _base =>
       // kReleaseMode ?
-      // _prodBase
+      _prodBase
   // :
-  _devBase
+  // _devBase
   ;
 
   /* ---------- ROUTES ---------- */
