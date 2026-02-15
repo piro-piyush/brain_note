@@ -62,6 +62,30 @@ class DocumentRepository {
     }
   }
 
+  Future<ErrorModel> getAllMyDocuments() async {
+    try {
+      final token = _storage.getToken();
+      if (token == null) {
+        return const ErrorModel(error: 'No token found');
+      }
+
+      final response = await _client.get(
+        ApiConfig.myDocUri,
+        headers: _headers(token: token),
+      );
+
+      final body = jsonDecode(response.body);
+      StatusHandler.handle(response.statusCode, body);
+
+      final list = body['data'] as List;
+      final documents = list.map((e) => DocumentModel.fromJson(e)).toList();
+
+      return ErrorModel(data: documents);
+    } catch (e, st) {
+      return _handleError(e, st);
+    }
+  }
+
   ErrorModel _handleError(Object e, StackTrace stack) {
     if (e is ApiException) {
       return ErrorModel(error: e.message);
