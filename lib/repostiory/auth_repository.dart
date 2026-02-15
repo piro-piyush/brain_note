@@ -139,7 +139,7 @@ class AuthRepository {
       }
 
       final response = await _client.get(
-        ApiConfig.getUri,
+        ApiConfig.userUri,
         headers: _headers(token: token),
       );
 

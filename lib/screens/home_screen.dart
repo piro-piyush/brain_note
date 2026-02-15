@@ -47,7 +47,7 @@ class HomeScreen extends ConsumerWidget {
         elevation: 0,
         actions: [
           IconButton(
-            onPressed: () {},
+            onPressed: () => createDoc(ref, context),
             icon: const Icon(Icons.add, color: kBlackColor),
           ),
           IconButton(

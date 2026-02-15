@@ -47,11 +47,9 @@ class DocumentRepository {
       }
 
       final response = await _client.post(
-        ApiConfig.docUri,
+        ApiConfig.createDocUri,
         headers: _headers(token: token),
-        body: jsonEncode({
-          "createdAt": DateTime.now().millisecondsSinceEpoch,
-        })
+        body: jsonEncode({"createdAt": DateTime.now().millisecondsSinceEpoch}),
       );
 
       final body = jsonDecode(response.body);
