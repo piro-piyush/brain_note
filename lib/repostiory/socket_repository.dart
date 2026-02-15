@@ -1,5 +1,4 @@
 import 'package:brain_note/clients/socket_client.dart';
-import 'package:flutter_quill/flutter_quill.dart';
 import 'package:socket_io_client/socket_io_client.dart';
 
 class SocketRepository {
