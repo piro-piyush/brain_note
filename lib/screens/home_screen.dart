@@ -7,6 +7,20 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
+  void signOut(WidgetRef ref, BuildContext context) async {
+    final repo = ref.read(authRepositoryProvider);
+
+    await repo.signOut();
+
+    ref.read(userProvider.notifier).clear();
+
+    if (context.mounted) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Logged out')));
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final UserModel? user = ref.watch(userProvider);
@@ -21,8 +35,8 @@ class HomeScreen extends ConsumerWidget {
             icon: const Icon(Icons.add, color: kBlackColor),
           ),
           IconButton(
-            onPressed: () {},
-            icon: const Icon(Icons.logout, color: kBlackColor),
+            onPressed: () => signOut(ref, context),
+            icon: const Icon(Icons.logout, color: kRedColor),
           ),
         ],
       ),
@@ -66,19 +80,7 @@ class HomeScreen extends ConsumerWidget {
 
                     /// Logout button
                     ElevatedButton(
-                      onPressed: () async {
-                        final repo = ref.read(authRepositoryProvider);
-
-                        await repo.signOut();
-
-                        ref.read(userProvider.notifier).clear();
-
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Logged out')),
-                          );
-                        }
-                      },
+                      onPressed: () => signOut(ref, context),
                       child: const Text('Logout'),
                     ),
                   ],
