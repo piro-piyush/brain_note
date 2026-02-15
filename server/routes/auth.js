@@ -21,7 +21,7 @@ router.post('/google', async (req, res) => {
   try {
     console.log('[Google Auth] Request body:', req.body);
 
-    const { token, platform } = req.body; // token = idToken (mobile) or accessToken (web)
+    const { token, platform } = req.body;
 
     if (!token || !platform) {
       console.warn('[Google Auth] Missing token or platform');

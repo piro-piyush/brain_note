@@ -12,6 +12,7 @@ const auth = require('../middlewares/auth');
 ===================================================== */
 router.post('/create', auth, async (req, res) => {
   try {
+    console.log('[Create Doc] Request body:', req.body);
     const { createdAt } = req.body;
 
     const newDocument = new Document({
