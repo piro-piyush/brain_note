@@ -55,8 +55,8 @@ class DocumentRepository {
       final body = jsonDecode(response.body);
       StatusHandler.handle(response.statusCode, body);
 
-      final user = DocumentModel.fromJson(body['data'].toString());
-      return ErrorModel(data: user);
+      final document = DocumentModel.fromJson(body['data']);
+      return ErrorModel(data: document);
     } catch (e, st) {
       return _handleError(e, st);
     }

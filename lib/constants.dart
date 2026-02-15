@@ -5,12 +5,13 @@ class ApiConfig {
   static const String _prodBase = 'https://brain-note-backend.onrender.com/api';
 
   static const String _devBase =
-      'http://10.0.2.2:3000/api'; // Android emulator localhost
+      'http://localhost:3001/api';
 
   static String get _base =>
       // kReleaseMode ?
-      _prodBase
-  // : _devBase
+      // _prodBase
+  // :
+  _devBase
   ;
 
   /* ---------- ROUTES ---------- */
