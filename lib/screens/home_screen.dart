@@ -1,8 +1,10 @@
 import 'package:brain_note/colors.dart';
 import 'package:brain_note/models/user_model.dart';
 import 'package:brain_note/repostiory/auth_repository.dart';
+import 'package:brain_note/repostiory/document_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:routemaster/routemaster.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -18,6 +20,20 @@ class HomeScreen extends ConsumerWidget {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('Logged out')));
+    }
+  }
+
+  void createDoc(WidgetRef ref, BuildContext context) async {
+    final repo = ref.read(docsRepositoryProvider);
+    final navigator = Routemaster.of(context);
+    final snackbar = ScaffoldMessenger.of(context);
+    final result = await repo.createDocument();
+
+    /// ❌ ERROR
+    if (result.data != null) {
+      navigator.push('/document/${result.data.id}');
+    } else {
+      snackbar.showSnackBar(SnackBar(content: Text(result.error!)));
     }
   }
 
