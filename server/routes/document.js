@@ -6,66 +6,86 @@ const ApiResponse = require('../utils/apiResponse');
 const HttpStatus = require('../utils/httpStatus');
 const auth = require('../middlewares/auth');
 
+
 /* =====================================================
-   CREATE DOCUMENT
-   POST /api/docs/create
+   UPDATE TITLE
+   POST /api/docs/title
 ===================================================== */
-router.post('/create', auth, async (req, res) => {
+router.post('/title', auth, async (req, res) => {
   try {
-    console.log('[Create Doc] Request body:', req.body);
+    const { id, title } = req.body;
 
-    const { createdAt } = req.body;
+    if (!id || !title) {
+      return ApiResponse.error(
+        res,
+        'Document id and title are required',
+        HttpStatus.BAD_REQUEST
+      );
+    }
 
-    const newDocument = new Document({
-      uid: req.userId,
-      title: 'Untitled Document',
-      createdAt,
-    });
+    const document = await Document.findByIdAndUpdate(
+      id,
+      { title },
+      { new: true } // return updated document
+    );
 
-    const savedDocument = await newDocument.save();
+    if (!document) {
+      return ApiResponse.error(
+        res,
+        'Document not found',
+        HttpStatus.NOT_FOUND
+      );
+    }
 
     console.log(
-      `[DOC_CREATED] user=${req.userId} docId=${savedDocument._id}`
+      `[DOC_UPDATED] user=${req.userId} docId=${document._id}`
     );
 
     return ApiResponse.success(
       res,
-      savedDocument,
-      'Document created successfully',
-      HttpStatus.CREATED
+      document,
+      'Document updated successfully',
+      HttpStatus.OK
     );
 
   } catch (error) {
     console.error(
-      `[DOC_CREATE_ERROR] user=${req.userId} message=${error.message}`
+      `[DOC_UPDATE_ERROR] user=${req.userId} message=${error.message}`
     );
 
     return ApiResponse.error(
       res,
-      'Failed to create document',
+      'Failed to update document',
       HttpStatus.INTERNAL_SERVER_ERROR
     );
   }
 });
 
+
 /* =====================================================
-   GET MY DOCUMENTS
-   GET /api/docs/me
+   GET SINGLE DOCUMENT
+   GET /api/docs/:id
 ===================================================== */
-router.get('/me', auth, async (req, res) => {
+router.get('/:id', auth, async (req, res) => {
   try {
-    const documents = await Document.find({
-      uid: req.userId
-    }).sort({ createdAt: -1 }).lean();
+    const document = await Document.findById(req.params.id).lean();
+
+    if (!document) {
+      return ApiResponse.error(
+        res,
+        'Document not found',
+        HttpStatus.NOT_FOUND
+      );
+    }
 
     console.log(
-      `[DOC_FETCH] user=${req.userId} count=${documents.length}`
+      `[DOC_SINGLE_FETCH] user=${req.userId} docId=${document._id}`
     );
 
     return ApiResponse.success(
       res,
-      documents,
-      'Documents fetched successfully',
+      document,
+      'Document fetched successfully',
       HttpStatus.OK
     );
 
@@ -76,11 +96,10 @@ router.get('/me', auth, async (req, res) => {
 
     return ApiResponse.error(
       res,
-      'Failed to fetch documents',
+      'Failed to fetch document',
       HttpStatus.INTERNAL_SERVER_ERROR
     );
   }
 });
-
 
 module.exports = router;
