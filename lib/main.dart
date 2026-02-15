@@ -3,9 +3,11 @@ import 'package:brain_note/repostiory/auth_repository.dart';
 import 'package:brain_note/repostiory/local_storage_repository.dart';
 import 'package:brain_note/router.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_quill/flutter_quill.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:routemaster/routemaster.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -48,6 +50,7 @@ class _MyAppState extends ConsumerState<MyApp> {
     return MaterialApp.router(
       title: 'Brain Note',
       debugShowCheckedModeBanner: false,
+      theme: ThemeData(primarySwatch: Colors.blue),
       routerDelegate: RoutemasterDelegate(
         routesBuilder: (context) {
           final user = ref.watch(userProvider);
@@ -58,6 +61,12 @@ class _MyAppState extends ConsumerState<MyApp> {
         },
       ),
       routeInformationParser: const RoutemasterParser(),
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        FlutterQuillLocalizations.delegate,
+      ],
     );
   }
 }

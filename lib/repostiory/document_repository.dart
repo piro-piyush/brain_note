@@ -86,6 +86,49 @@ class DocumentRepository {
     }
   }
 
+  Future<ErrorModel> updateTitle(String id, String title) async {
+    try {
+      final token = _storage.getToken();
+      if (token == null) {
+        return const ErrorModel(error: 'No token found');
+      }
+
+      final response = await _client.post(
+        ApiConfig.changeTitleUri,
+        headers: _headers(token: token),
+        body: jsonEncode({'id': id, 'title': title}),
+      );
+
+      final body = jsonDecode(response.body);
+      StatusHandler.handle(response.statusCode, body);
+
+      final document = DocumentModel.fromJson(body['data']);
+      return ErrorModel(data: document);
+    } catch (e, st) {
+      return _handleError(e, st);
+    }
+  }
+
+
+  Future<ErrorModel> getDocument(String id) async {
+    try {
+      final token = _storage.getToken();
+      if (token == null) {
+        return const ErrorModel(error: 'No token found');
+      }
+      final response = await _client.get(
+        ApiConfig.getDocUri(id),
+        headers: _headers(token: token),
+      );
+      final body = jsonDecode(response.body);
+      StatusHandler.handle(response.statusCode, body);
+      final document = DocumentModel.fromJson(body['data']);
+      return ErrorModel(data: document);
+    } catch (e, st) {
+      return _handleError(e, st);
+    }
+  }
+
   ErrorModel _handleError(Object e, StackTrace stack) {
     if (e is ApiException) {
       return ErrorModel(error: e.message);
