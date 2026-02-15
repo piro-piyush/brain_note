@@ -16,7 +16,7 @@ router.post('/create', auth, async (req, res) => {
     const { createdAt } = req.body;
 
     const newDocument = new Document({
-      uid: req.user,
+      uid: req.userId,
       title: 'Untitled Document',
       createdAt,
     });
